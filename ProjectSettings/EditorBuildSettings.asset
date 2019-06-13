@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/AR Robot Main Scene.unity
+    guid: 025e87f365d60774b8ee7ffc051e8f38
   m_configObjects: {}
