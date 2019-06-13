@@ -8,6 +8,8 @@ public class SmartPalContorol : MonoBehaviour {
 
 	private GameObject coordinates_adapter;
 
+	private GameObject left_arm;
+
 	public Text CameraPositionText;
 	public Text SmartPalPositionText;
 
@@ -23,6 +25,9 @@ public class SmartPalContorol : MonoBehaviour {
 	private Button LeftButton;
 	private Button RightButton;
 
+	private Button ArmUpButton;
+	private Button ArmDownButton;
+
 	private bool push_x_plus = false;
 	private bool push_x_minus = false;
 	private bool push_y_plus = false;
@@ -31,20 +36,18 @@ public class SmartPalContorol : MonoBehaviour {
 	private bool push_z_minus = false;
 	private bool push_left = false;
 	private bool push_right = false;
+	private bool push_arm_up = false;
+	private bool push_arm_down = false;
 
 	// Start is called before the first frame update
 	void Start() {
 		debug = GameObject.Find("Main System/Text Canvas/Debug Text").GetComponent<DebugText>();
-
-		/*
-		coordinates_adapter = GameObject.Find("Coordinates Adapter");
-		coordinates_adapter.transform.parent = this.transform;
-		coordinates_adapter.transform.position = this.transform.position;
-		coordinates_adapter.transform.rotation = this.transform.rotation;
-		*/
+		
 		GameObject prefab = (GameObject)Resources.Load("Coordinates Adapter");
 		coordinates_adapter = (GameObject)Instantiate(prefab, this.transform);
 		coordinates_adapter.transform.parent = this.transform;
+
+		left_arm = GameObject.Find("l_arm_j1_link");
 		
 		PosXPlusButton = GameObject.Find("Main System/Button Canvas/X Plus Button").GetComponent<Button>();
 		PosXMinusButton = GameObject.Find("Main System/Button Canvas/X Minus Button").GetComponent<Button>();
@@ -54,6 +57,8 @@ public class SmartPalContorol : MonoBehaviour {
 		PosZMinusButton = GameObject.Find("Main System/Button Canvas/Z Minus Button").GetComponent<Button>();
 		LeftButton = GameObject.Find("Main System/Button Canvas/Left Button").GetComponent<Button>();
 		RightButton = GameObject.Find("Main System/Button Canvas/Right Button").GetComponent<Button>();
+		ArmUpButton = GameObject.Find("Main System/Button Canvas/Arm Up Button").GetComponent<Button>();
+		ArmDownButton = GameObject.Find("Main System/Button Canvas/Arm Down Button").GetComponent<Button>();
 
 		AddTrigger(PosXPlusButton);
 		AddTrigger(PosXMinusButton);
@@ -63,6 +68,8 @@ public class SmartPalContorol : MonoBehaviour {
 		AddTrigger(PosZMinusButton);
 		AddTrigger(LeftButton);
 		AddTrigger(RightButton);
+		AddTrigger(ArmUpButton);
+		AddTrigger(ArmDownButton);
 	}
 
 	// Update is called once per frame
@@ -71,6 +78,9 @@ public class SmartPalContorol : MonoBehaviour {
 		SmartPalPositionText.text = "SmartPal Position : " + this.transform.position.ToString("f2");
 
 		ButtonControl();
+
+		//debug.ClearDebug();
+		//debug.Debug(left_arm.transform.localRotation.eulerAngles.y.ToString());
 	}
 
 	void AddTrigger(Button button) {
@@ -112,6 +122,14 @@ public class SmartPalContorol : MonoBehaviour {
 			case "Right Button":
 			entry_down.callback.AddListener((x) => { push_right = true; });
 			entry_up.callback.AddListener((x) => { push_right = false; });
+			break;
+			case "Arm Up Button":
+			entry_down.callback.AddListener((x) => { push_arm_up = true; });
+			entry_up.callback.AddListener((x) => { push_arm_up = false; });
+			break;
+			case "Arm Down Button":
+			entry_down.callback.AddListener((x) => { push_arm_down = true; });
+			entry_up.callback.AddListener((x) => { push_arm_down = false; });
 			break;
 		}
 
@@ -168,6 +186,14 @@ public class SmartPalContorol : MonoBehaviour {
 
 		if (push_right) {
 			this.transform.eulerAngles += new Vector3(0, 45.0f * Time.deltaTime, 0);
+		}
+
+		if (push_arm_up) {
+			left_arm.transform.localRotation *= Quaternion.Euler(0, -30.0f * Time.deltaTime, 0);
+		}
+
+		if (push_arm_down) {
+			left_arm.transform.localRotation *= Quaternion.Euler(0, 30 * Time.deltaTime, 0);
 		}
 	}
 }
