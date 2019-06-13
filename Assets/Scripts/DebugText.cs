@@ -10,7 +10,6 @@ public class DebugText : MonoBehaviour {
 	// Start is called before the first frame update
 	void Start() {
 		text = GetComponent<Text>();
-		Debug("");
 	}
 
 	// Update is called once per frame

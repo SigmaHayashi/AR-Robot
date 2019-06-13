@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 
 public class SmartPalContorol : MonoBehaviour {
 
-	//public GameObject SmartPal;
+	private GameObject coordinates_adapter;
 
 	public Text CameraPositionText;
 	public Text SmartPalPositionText;
@@ -20,16 +20,31 @@ public class SmartPalContorol : MonoBehaviour {
 	private Button PosZPlusButton;
 	private Button PosZMinusButton;
 
+	private Button LeftButton;
+	private Button RightButton;
+
 	private bool push_x_plus = false;
 	private bool push_x_minus = false;
 	private bool push_y_plus = false;
 	private bool push_y_minus = false;
 	private bool push_z_plus = false;
 	private bool push_z_minus = false;
+	private bool push_left = false;
+	private bool push_right = false;
 
 	// Start is called before the first frame update
 	void Start() {
 		debug = GameObject.Find("Main System/Text Canvas/Debug Text").GetComponent<DebugText>();
+
+		/*
+		coordinates_adapter = GameObject.Find("Coordinates Adapter");
+		coordinates_adapter.transform.parent = this.transform;
+		coordinates_adapter.transform.position = this.transform.position;
+		coordinates_adapter.transform.rotation = this.transform.rotation;
+		*/
+		GameObject prefab = (GameObject)Resources.Load("Coordinates Adapter");
+		coordinates_adapter = (GameObject)Instantiate(prefab, this.transform);
+		coordinates_adapter.transform.parent = this.transform;
 		
 		PosXPlusButton = GameObject.Find("Main System/Button Canvas/X Plus Button").GetComponent<Button>();
 		PosXMinusButton = GameObject.Find("Main System/Button Canvas/X Minus Button").GetComponent<Button>();
@@ -37,15 +52,17 @@ public class SmartPalContorol : MonoBehaviour {
 		PosYMinusButton = GameObject.Find("Main System/Button Canvas/Y Minus Button").GetComponent<Button>();
 		PosZPlusButton = GameObject.Find("Main System/Button Canvas/Z Plus Button").GetComponent<Button>();
 		PosZMinusButton = GameObject.Find("Main System/Button Canvas/Z Minus Button").GetComponent<Button>();
-		
+		LeftButton = GameObject.Find("Main System/Button Canvas/Left Button").GetComponent<Button>();
+		RightButton = GameObject.Find("Main System/Button Canvas/Right Button").GetComponent<Button>();
+
 		AddTrigger(PosXPlusButton);
 		AddTrigger(PosXMinusButton);
 		AddTrigger(PosYPlusButton);
 		AddTrigger(PosYMinusButton);
 		AddTrigger(PosZPlusButton);
 		AddTrigger(PosZMinusButton);
-
-		//debug.Debug("HOGE");
+		AddTrigger(LeftButton);
+		AddTrigger(RightButton);
 	}
 
 	// Update is called once per frame
@@ -88,6 +105,14 @@ public class SmartPalContorol : MonoBehaviour {
 			entry_down.callback.AddListener((x) => { push_z_minus = true; });
 			entry_up.callback.AddListener((x) => { push_z_minus = false; });
 			break;
+			case "Left Button":
+			entry_down.callback.AddListener((x) => { push_left = true; });
+			entry_up.callback.AddListener((x) => { push_left = false; });
+			break;
+			case "Right Button":
+			entry_down.callback.AddListener((x) => { push_right = true; });
+			entry_up.callback.AddListener((x) => { push_right = false; });
+			break;
 		}
 
 		trigger.triggers.Add(entry_down);
@@ -96,27 +121,53 @@ public class SmartPalContorol : MonoBehaviour {
 
 	void ButtonControl() {
 		if (push_x_plus) {
-			this.transform.position += new Vector3(1.0f * Time.deltaTime, 0, 0);
+			Vector3 tmp_position = new Vector3(1.0f * Time.deltaTime, 0, 0);
+			coordinates_adapter.transform.localPosition = tmp_position;
+			tmp_position = coordinates_adapter.transform.position;
+			this.transform.position = tmp_position;
 		}
 
 		if (push_x_minus) {
-			this.transform.position += new Vector3(-1.0f * Time.deltaTime, 0, 0);
+			Vector3 tmp_position = new Vector3(-1.0f * Time.deltaTime, 0, 0);
+			coordinates_adapter.transform.localPosition = tmp_position;
+			tmp_position = coordinates_adapter.transform.position;
+			this.transform.position = tmp_position;
 		}
 
 		if (push_y_plus) {
-			this.transform.position += new Vector3(0, 1.0f * Time.deltaTime, 0);
+			Vector3 tmp_position = new Vector3(0, 1.0f * Time.deltaTime, 0);
+			coordinates_adapter.transform.localPosition = tmp_position;
+			tmp_position = coordinates_adapter.transform.position;
+			this.transform.position = tmp_position;
 		}
 
 		if (push_y_minus) {
-			this.transform.position += new Vector3(0, -1.0f * Time.deltaTime, 0);
+			Vector3 tmp_position = new Vector3(0, -1.0f * Time.deltaTime, 0);
+			coordinates_adapter.transform.localPosition = tmp_position;
+			tmp_position = coordinates_adapter.transform.position;
+			this.transform.position = tmp_position;
 		}
 
 		if (push_z_plus) {
-			this.transform.position += new Vector3(0, 0, 1.0f * Time.deltaTime);
+			Vector3 tmp_position = new Vector3(0, 0, 1.0f * Time.deltaTime);
+			coordinates_adapter.transform.localPosition = tmp_position;
+			tmp_position = coordinates_adapter.transform.position;
+			this.transform.position = tmp_position;
 		}
 
 		if (push_z_minus) {
-			this.transform.position += new Vector3(0, 0, -1.0f * Time.deltaTime);
+			Vector3 tmp_position = new Vector3(0, 0, -1.0f * Time.deltaTime);
+			coordinates_adapter.transform.localPosition = tmp_position;
+			tmp_position = coordinates_adapter.transform.position;
+			this.transform.position = tmp_position;
+		}
+
+		if (push_left) {
+			this.transform.eulerAngles += new Vector3(0, -45.0f * Time.deltaTime, 0);
+		}
+
+		if (push_right) {
+			this.transform.eulerAngles += new Vector3(0, 45.0f * Time.deltaTime, 0);
 		}
 	}
 }
