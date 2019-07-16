@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using GoogleARCore;
 
 public class SmartPalContorol : MonoBehaviour {
 
 	private GameObject coordinates_adapter;
 
 	private GameObject left_arm;
+
+	public Canvas ButtonCanvas;
 
 	public Text CameraPositionText;
 	public Text SmartPalPositionText;
@@ -38,6 +41,9 @@ public class SmartPalContorol : MonoBehaviour {
 	private bool push_right = false;
 	private bool push_arm_up = false;
 	private bool push_arm_down = false;
+
+	private int init_state = 0;
+	private RobotColorController ColorController;
 
 	// Start is called before the first frame update
 	void Start() {
@@ -70,6 +76,11 @@ public class SmartPalContorol : MonoBehaviour {
 		AddTrigger(RightButton);
 		AddTrigger(ArmUpButton);
 		AddTrigger(ArmDownButton);
+
+		ButtonCanvas = GameObject.Find("Main System/Button Canvas").GetComponent<Canvas>();
+		ButtonCanvas.gameObject.SetActive(false);
+
+		ColorController = transform.GetComponent<RobotColorController>();
 	}
 
 	// Update is called once per frame
@@ -77,10 +88,37 @@ public class SmartPalContorol : MonoBehaviour {
 		CameraPositionText.text = "Camra Position : " + Camera.main.transform.position.ToString("f2");
 		SmartPalPositionText.text = "SmartPal Position : " + this.transform.position.ToString("f2");
 
-		ButtonControl();
+		RobotInit();
+
+		if(init_state >= 2) {
+			ButtonControl();
+		}
 
 		//debug.ClearDebug();
 		//debug.Debug(left_arm.transform.localRotation.eulerAngles.y.ToString());
+	}
+
+	void RobotInit() {
+		switch (init_state) {
+			case 0:
+			ColorController.robot_alpha = 0.0f;
+			ColorController.ChangeRobotColors(ColorController.safety_color);
+			init_state = 1;
+			break;
+
+			case 1:
+			List<DetectedPlane> planes = new List<DetectedPlane>();
+			Session.GetTrackables<DetectedPlane>(planes, TrackableQueryFilter.All);
+			//if (Session.Status == SessionStatus.Tracking) {
+			if (planes[0] != null) {
+				ColorController.robot_alpha = 1.0f;
+				ColorController.ChangeRobotColors(ColorController.safety_color);
+				ButtonCanvas.gameObject.SetActive(true);
+				init_state = 2;
+			}
+			break;
+		}
+
 	}
 
 	void AddTrigger(Button button) {

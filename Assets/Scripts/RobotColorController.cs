@@ -87,7 +87,7 @@ public class RobotColorController : MonoBehaviour {
 		}
 	}
 
-	void ChangeRobotColors(Color color, char state = ROBOT_STATE_SAFETY) {
+	public void ChangeRobotColors(Color color, char state = ROBOT_STATE_SAFETY) {
 		foreach (Renderer ren in renderers) {
 			mats = ren.materials;
 			for (int i = 0; i < ren.materials.Length; i++) {
