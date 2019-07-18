@@ -109,16 +109,6 @@ public class SmartPalContorol : MonoBehaviour {
 			case 1:
 			List<DetectedPlane> planes = new List<DetectedPlane>();
 			Session.GetTrackables<DetectedPlane>(planes, TrackableQueryFilter.All);
-			/*
-			if (planes[0] != null) {
-				transform.position = planes[0].CenterPose.position;
-
-				ColorController.robot_alpha = 1.0f;
-				ColorController.ChangeRobotColors(ColorController.safety_color);
-				ButtonCanvas.gameObject.SetActive(true);
-				init_state = 2;
-			}
-			*/
 			foreach(DetectedPlane plane in planes) {
 				if(plane.PlaneType == DetectedPlaneType.HorizontalUpwardFacing) {
 					transform.position = plane.CenterPose.position;
