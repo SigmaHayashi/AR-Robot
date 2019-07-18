@@ -85,8 +85,8 @@ public class SmartPalContorol : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update() {
-		CameraPositionText.text = "Camra Position : " + Camera.main.transform.position.ToString("f2");
-		SmartPalPositionText.text = "SmartPal Position : " + this.transform.position.ToString("f2");
+		CameraPositionText.text = "Camra : " + Camera.main.transform.position.ToString("f2") + Camera.main.transform.eulerAngles.ToString("f2");
+		SmartPalPositionText.text = "SmartPal : " + transform.position.ToString("f2") + transform.eulerAngles.ToString("f2");
 
 		RobotInit();
 
@@ -109,12 +109,34 @@ public class SmartPalContorol : MonoBehaviour {
 			case 1:
 			List<DetectedPlane> planes = new List<DetectedPlane>();
 			Session.GetTrackables<DetectedPlane>(planes, TrackableQueryFilter.All);
-			//if (Session.Status == SessionStatus.Tracking) {
+			/*
 			if (planes[0] != null) {
+				transform.position = planes[0].CenterPose.position;
+
 				ColorController.robot_alpha = 1.0f;
 				ColorController.ChangeRobotColors(ColorController.safety_color);
 				ButtonCanvas.gameObject.SetActive(true);
 				init_state = 2;
+			}
+			*/
+			foreach(DetectedPlane plane in planes) {
+				if(plane.PlaneType == DetectedPlaneType.HorizontalUpwardFacing) {
+					transform.position = plane.CenterPose.position;
+
+					Vector3 camera_pos = Camera.main.transform.position;
+					Vector3 robot_pos = transform.position;
+					float rot2robot = Mathf.Atan2((robot_pos.x - camera_pos.x) * -1, robot_pos.z - camera_pos.z);
+					rot2robot = rot2robot / Mathf.PI * 180.0f;
+					Vector3 robot_euler = transform.eulerAngles;
+					robot_euler.y -= rot2robot;
+					transform.eulerAngles = robot_euler;
+
+					ColorController.robot_alpha = 1.0f;
+					ColorController.ChangeRobotColors(ColorController.safety_color);
+					ButtonCanvas.gameObject.SetActive(true);
+					init_state = 2;
+					break;
+				}
 			}
 			break;
 		}
