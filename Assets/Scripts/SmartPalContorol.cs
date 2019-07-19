@@ -9,15 +9,18 @@ public class SmartPalContorol : MonoBehaviour {
 
 	private GameObject coordinates_adapter;
 
+	private GameObject right_arm;
 	private GameObject left_arm;
 
-	public Canvas ButtonCanvas;
+	//public Canvas ButtonCanvas;
+	private Canvas ControllCanvas;
 
 	public Text CameraPositionText;
 	public Text SmartPalPositionText;
 
 	private DebugText debug;
 
+	/*
 	private Button PosXPlusButton;
 	private Button PosXMinusButton;
 	private Button PosYPlusButton;
@@ -30,7 +33,17 @@ public class SmartPalContorol : MonoBehaviour {
 
 	private Button ArmUpButton;
 	private Button ArmDownButton;
+	*/
+	private Button RightArmUpButton;
+	private Button RightArmDownButton;
+	private Button LeftArmUpButton;
+	private Button LeftArmDownButton;
+	private Button MoveForwardButton;
+	private Button MoveBackButton;
+	private Button TurnRightButton;
+	private Button TurnLeftButton;
 
+	/*
 	private bool push_x_plus = false;
 	private bool push_x_minus = false;
 	private bool push_y_plus = false;
@@ -41,6 +54,15 @@ public class SmartPalContorol : MonoBehaviour {
 	private bool push_right = false;
 	private bool push_arm_up = false;
 	private bool push_arm_down = false;
+	*/
+	private bool push_right_arm_up = false;
+	private bool push_right_arm_down = false;
+	private bool push_left_arm_up = false;
+	private bool push_left_arm_down = false;
+	private bool push_move_forward = false;
+	private bool push_move_back = false;
+	private bool push_turn_right = false;
+	private bool push_turn_left = false;
 
 	private int init_state = 0;
 	private RobotColorController ColorController;
@@ -53,8 +75,10 @@ public class SmartPalContorol : MonoBehaviour {
 		coordinates_adapter = (GameObject)Instantiate(prefab, this.transform);
 		coordinates_adapter.transform.parent = this.transform;
 
+		right_arm = GameObject.Find("r_arm_j1_link");
 		left_arm = GameObject.Find("l_arm_j1_link");
-		
+
+		/*
 		PosXPlusButton = GameObject.Find("Main System/Button Canvas/X Plus Button").GetComponent<Button>();
 		PosXMinusButton = GameObject.Find("Main System/Button Canvas/X Minus Button").GetComponent<Button>();
 		PosYPlusButton = GameObject.Find("Main System/Button Canvas/Y Plus Button").GetComponent<Button>();
@@ -76,9 +100,31 @@ public class SmartPalContorol : MonoBehaviour {
 		AddTrigger(RightButton);
 		AddTrigger(ArmUpButton);
 		AddTrigger(ArmDownButton);
+		*/
+		RightArmUpButton = GameObject.Find("Main System/Robot Controll Canvas/Right Arm Up Button").GetComponent<Button>();
+		RightArmDownButton = GameObject.Find("Main System/Robot Controll Canvas/Right Arm Down Button").GetComponent<Button>();
+		LeftArmUpButton = GameObject.Find("Main System/Robot Controll Canvas/Left Arm Up Button").GetComponent<Button>();
+		LeftArmDownButton = GameObject.Find("Main System/Robot Controll Canvas/Left Arm Down Button").GetComponent<Button>();
+		MoveForwardButton = GameObject.Find("Main System/Robot Controll Canvas/Move Forward Button").GetComponent<Button>();
+		MoveBackButton = GameObject.Find("Main System/Robot Controll Canvas/Move Back Button").GetComponent<Button>();
+		TurnRightButton = GameObject.Find("Main System/Robot Controll Canvas/Turn Right Button").GetComponent<Button>();
+		TurnLeftButton = GameObject.Find("Main System/Robot Controll Canvas/Turn Left Button").GetComponent<Button>();
 
+		AddTrigger(RightArmUpButton);
+		AddTrigger(RightArmDownButton);
+		AddTrigger(LeftArmUpButton);
+		AddTrigger(LeftArmDownButton);
+		AddTrigger(MoveForwardButton);
+		AddTrigger(MoveBackButton);
+		AddTrigger(TurnRightButton);
+		AddTrigger(TurnLeftButton);
+
+		/*
 		ButtonCanvas = GameObject.Find("Main System/Button Canvas").GetComponent<Canvas>();
 		ButtonCanvas.gameObject.SetActive(false);
+		*/
+		ControllCanvas = GameObject.Find("Main System/Robot Controll Canvas").GetComponent<Canvas>();
+		ControllCanvas.gameObject.SetActive(false);
 
 		ColorController = transform.GetComponent<RobotColorController>();
 	}
@@ -123,7 +169,8 @@ public class SmartPalContorol : MonoBehaviour {
 
 					ColorController.robot_alpha = 1.0f;
 					ColorController.ChangeRobotColors(ColorController.safety_color);
-					ButtonCanvas.gameObject.SetActive(true);
+					//ButtonCanvas.gameObject.SetActive(true);
+					ControllCanvas.gameObject.SetActive(true);
 					init_state = 2;
 					break;
 				}
@@ -141,6 +188,7 @@ public class SmartPalContorol : MonoBehaviour {
 		EventTrigger.Entry entry_up = new EventTrigger.Entry();
 		entry_up.eventID = EventTriggerType.PointerUp;
 		switch (button.name.ToString()) {
+			/*
 			case "X Plus Button":
 			entry_down.callback.AddListener((x) => { push_x_plus = true; });
 			entry_up.callback.AddListener((x) => { push_x_plus = false; });
@@ -181,6 +229,39 @@ public class SmartPalContorol : MonoBehaviour {
 			entry_down.callback.AddListener((x) => { push_arm_down = true; });
 			entry_up.callback.AddListener((x) => { push_arm_down = false; });
 			break;
+			*/
+			case "Right Arm Up Button":
+			entry_down.callback.AddListener((x) => { push_right_arm_up = true; });
+			entry_up.callback.AddListener((x) => { push_right_arm_up = false; });
+			break;
+			case "Right Arm Down Button":
+			entry_down.callback.AddListener((x) => { push_right_arm_down = true; });
+			entry_up.callback.AddListener((x) => { push_right_arm_down = false; });
+			break;
+			case "Left Arm Up Button":
+			entry_down.callback.AddListener((x) => { push_left_arm_up = true; });
+			entry_up.callback.AddListener((x) => { push_left_arm_up = false; });
+			break;
+			case "Left Arm Down Button":
+			entry_down.callback.AddListener((x) => { push_left_arm_down = true; });
+			entry_up.callback.AddListener((x) => { push_left_arm_down = false; });
+			break;
+			case "Move Forward Button":
+			entry_down.callback.AddListener((x) => { push_move_forward = true; });
+			entry_up.callback.AddListener((x) => { push_move_forward = false; });
+			break;
+			case "Move Back Button":
+			entry_down.callback.AddListener((x) => { push_move_back = true; });
+			entry_up.callback.AddListener((x) => { push_move_back = false; });
+			break;
+			case "Turn Right Button":
+			entry_down.callback.AddListener((x) => { push_turn_right = true; });
+			entry_up.callback.AddListener((x) => { push_turn_right = false; });
+			break;
+			case "Turn Left Button":
+			entry_down.callback.AddListener((x) => { push_turn_left = true; });
+			entry_up.callback.AddListener((x) => { push_turn_left = false; });
+			break;
 		}
 
 		trigger.triggers.Add(entry_down);
@@ -188,6 +269,7 @@ public class SmartPalContorol : MonoBehaviour {
 	}
 
 	void ButtonControl() {
+		/*
 		if (push_x_plus) {
 			Vector3 tmp_position = new Vector3(1.0f * Time.deltaTime, 0, 0);
 			coordinates_adapter.transform.localPosition = tmp_position;
@@ -244,6 +326,45 @@ public class SmartPalContorol : MonoBehaviour {
 
 		if (push_arm_down) {
 			left_arm.transform.localRotation *= Quaternion.Euler(0, 30 * Time.deltaTime, 0);
+		}
+		*/
+
+		if (push_right_arm_up) {
+			right_arm.transform.localRotation *= Quaternion.Euler(0, -30.0f * Time.deltaTime, 0);
+		}
+
+		if (push_right_arm_down) {
+			right_arm.transform.localRotation *= Quaternion.Euler(0, 30.0f * Time.deltaTime, 0);
+		}
+
+		if (push_left_arm_up) {
+			left_arm.transform.localRotation *= Quaternion.Euler(0, -30.0f * Time.deltaTime, 0);
+		}
+
+		if (push_left_arm_down) {
+			left_arm.transform.localRotation *= Quaternion.Euler(0, 30.0f * Time.deltaTime, 0);
+		}
+
+		if (push_move_forward) {
+			Vector3 tmp_position = new Vector3(0, 0, 1.0f * Time.deltaTime);
+			coordinates_adapter.transform.localPosition = tmp_position;
+			tmp_position = coordinates_adapter.transform.position;
+			transform.position = tmp_position;
+		}
+
+		if (push_move_back) {
+			Vector3 tmp_position = new Vector3(0, 0, -1.0f * Time.deltaTime);
+			coordinates_adapter.transform.localPosition = tmp_position;
+			tmp_position = coordinates_adapter.transform.position;
+			transform.position = tmp_position;
+		}
+
+		if (push_turn_right) {
+			transform.eulerAngles += new Vector3(0, 45.0f * Time.deltaTime, 0);
+		}
+
+		if (push_turn_left) {
+			transform.eulerAngles += new Vector3(0, -45.0f * Time.deltaTime, 0);
 		}
 	}
 }
