@@ -10,7 +10,9 @@ public class RobotColorController : MonoBehaviour {
 	private GameObject ar_camera;
 	
 	[Range(0, 10)]
-	public float safety_distance = 1.0f;
+	public float safety_distance;
+	[Range(0, 10)]
+	public float more_safety_distance;
 
 	Renderer[] renderers;
 	Material[] mats;
@@ -19,11 +21,12 @@ public class RobotColorController : MonoBehaviour {
 	public Color danger_color = new Color32(255, 0, 0, 255);
 
 	[Range(0, 1)]
-	public float robot_alpha = 1.0f;
+	public float robot_alpha;
 
 	private char robot_state;
 	private const char ROBOT_STATE_SAFETY = (char)0x00;
 	private const char ROBOT_STATE_DANGER = (char)0x01;
+	private const char ROBOT_STATE_MORE_SAFETY = (char)0x02;
 
 	// Start is called before the first frame update
 	void Start() {
@@ -61,6 +64,11 @@ public class RobotColorController : MonoBehaviour {
 				ChangeRobotColors(danger_color, ROBOT_STATE_DANGER);
 			}
 		}
+		else if(min_distance > more_safety_distance) {
+			if(robot_state != ROBOT_STATE_MORE_SAFETY) {
+				ChangeRobotColors(origin_colors, ROBOT_STATE_MORE_SAFETY);
+			}
+		}
 		else {
 			if (robot_state != ROBOT_STATE_SAFETY) {
 				ChangeRobotColors(safety_color, ROBOT_STATE_SAFETY);
@@ -92,6 +100,19 @@ public class RobotColorController : MonoBehaviour {
 			mats = ren.materials;
 			for (int i = 0; i < ren.materials.Length; i++) {
 				Color tmp_color = color;
+				tmp_color.a = robot_alpha;
+				mats[i].SetColor("_Color", tmp_color);
+			}
+			ren.materials = mats;
+		}
+		robot_state = state;
+	}
+
+	public void ChangeRobotColors(List<Color> colors, char state = ROBOT_STATE_MORE_SAFETY) {
+		foreach (Renderer ren in renderers) {
+			mats = ren.materials;
+			for (int i = 0; i < ren.materials.Length; i++) {
+				Color tmp_color = colors[i];
 				tmp_color.a = robot_alpha;
 				mats[i].SetColor("_Color", tmp_color);
 			}
