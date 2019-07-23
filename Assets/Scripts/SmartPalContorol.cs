@@ -65,6 +65,9 @@ public class SmartPalContorol : MonoBehaviour {
 	private bool push_arm_reset = false;
 
 	private int init_state = 0;
+	private int base_plane_num;
+	private DetectedPlane base_plane;
+	private float pos_offset_y = 0.0f;
 	private RobotColorController ColorController;
 	private float robot_alpha_default;
 
@@ -143,8 +146,10 @@ public class SmartPalContorol : MonoBehaviour {
 
 		if(init_state >= 2) {
 			ButtonControl();
+			
+			AutoYControll();
 		}
-
+		
 		//debug.ClearDebug();
 		//debug.Debug(left_arm.transform.localRotation.eulerAngles.y.ToString());
 	}
@@ -163,8 +168,12 @@ public class SmartPalContorol : MonoBehaviour {
 			case 1:
 			List<DetectedPlane> planes = new List<DetectedPlane>();
 			Session.GetTrackables<DetectedPlane>(planes, TrackableQueryFilter.All);
+			planes.Reverse();
 			foreach(DetectedPlane plane in planes) {
 				if(plane.PlaneType == DetectedPlaneType.HorizontalUpwardFacing) {
+					base_plane_num = planes.IndexOf(plane);
+					base_plane = plane;
+
 					transform.position = plane.CenterPose.position;
 
 					Vector3 camera_pos = Camera.main.transform.position;
@@ -197,11 +206,35 @@ public class SmartPalContorol : MonoBehaviour {
 			}
 			break;
 		}
+	}
 
+	void AutoYControll() {
+		List<DetectedPlane> planes = new List<DetectedPlane>();
+		Session.GetTrackables<DetectedPlane>(planes, TrackableQueryFilter.All);
+
+		/*
+		planes.Reverse();
+		foreach (DetectedPlane plane in planes) {
+			if (plane.PlaneType == DetectedPlaneType.HorizontalUpwardFacing) {
+				Vector3 tmp_pos = transform.position;
+				tmp_pos.y = plane.CenterPose.position.y;
+				transform.position = tmp_pos;
+			}
+		}
+		*/
+		/*
+		DetectedPlane plane = planes[base_plane_num];
+		Vector3 tmp_pos = transform.position;
+		tmp_pos.y = plane.CenterPose.position.y;
+		transform.position = tmp_pos;
+		*/
+		Vector3 tmp_pos = transform.position;
+		tmp_pos.y = base_plane.CenterPose.position.y + pos_offset_y;
+		transform.position = tmp_pos;
+		ArrowChange();
 	}
 
 	void AddTrigger(Button button) {
-
 		EventTrigger trigger = button.GetComponent<EventTrigger>();
 		EventTrigger.Entry entry_down = new EventTrigger.Entry();
 		entry_down.eventID = EventTriggerType.PointerDown;
@@ -356,19 +389,25 @@ public class SmartPalContorol : MonoBehaviour {
 		}
 
 		if (push_y_plus) {
+			/*
 			Vector3 tmp_pos = transform.position;
 			tmp_pos.y += 0.5f * Time.deltaTime;
 			transform.position = tmp_pos;
+			*/
+			pos_offset_y += 0.5f * Time.deltaTime;
 
-			ArrowChange();
+			//ArrowChange();
 		}
 
 		if (push_y_minus) {
+			/*
 			Vector3 tmp_pos = transform.position;
 			tmp_pos.y -= 0.5f * Time.deltaTime;
 			transform.position = tmp_pos;
+			*/
+			pos_offset_y -= 0.5f * Time.deltaTime;
 
-			ArrowChange();
+			//ArrowChange();
 		}
 
 		if (push_z_plus) {
