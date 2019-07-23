@@ -8,24 +8,28 @@ using GoogleARCore;
 
 public class SmartPalContorol : MonoBehaviour {
 
+	//MainSystemのスクリプト
 	private MainScript Main;
 
+	//移動時の座標変換するやつ
 	private GameObject coordinates_adapter;
 
+	//両腕
 	private GameObject right_arm;
 	private GameObject left_arm;
 
+	//前方を表す矢印
 	[NonSerialized] public GameObject arrow3D;
 	[NonSerialized] public bool finish_arrow = false;
 
-	//public Canvas ButtonCanvas;
-	private Canvas ControllCanvas;
-
+	//カメラとロボットの位置と姿勢を表示するテキスト
 	public Text CameraPositionText;
 	public Text SmartPalPositionText;
 
-	private DebugText debug;
+	//デバッグ用テキスト
+	//private DebugText debug;
 	
+	//ボタンたち
 	private Button RightArmUpButton;
 	private Button RightArmDownButton;
 	private Button LeftArmUpButton;
@@ -45,6 +49,7 @@ public class SmartPalContorol : MonoBehaviour {
 	private Button RightButton;
 	private Button ArmResetButton;
 
+	//ボタンを押しているかどうかの判定するやつ
 	private bool push_right_arm_up = false;
 	private bool push_right_arm_down = false;
 	private bool push_left_arm_up = false;
@@ -64,22 +69,32 @@ public class SmartPalContorol : MonoBehaviour {
 	private bool push_right = false;
 	private bool push_arm_reset = false;
 
+	//初期化の状態
 	private int init_state = 0;
-	private int base_plane_num;
+
+	//ロボットの位置の基準となる平面
 	private DetectedPlane base_plane;
+
+	//ロボットの位置の平面に対するY座標のオフセット
 	private float pos_offset_y = 0.0f;
+
+	//ロボットのShader関連
 	private RobotColorController ColorController;
 	private float robot_alpha_default;
+	
 
-	// Start is called before the first frame update
+	/************************************************************
+	 * Start is called before the first frame update
+	 * 最初に1回呼び出されるよ～
+	 ************************************************************/
 	void Start() {
 		Main = GameObject.Find("Main System").GetComponent<MainScript>();
 
-		debug = GameObject.Find("Main System/Text Canvas/Debug Text").GetComponent<DebugText>();
+		//debug = GameObject.Find("Main System/Text Canvas/Debug Text").GetComponent<DebugText>();
 		
 		GameObject prefab = (GameObject)Resources.Load("Coordinates Adapter");
-		coordinates_adapter = (GameObject)Instantiate(prefab, this.transform);
-		coordinates_adapter.transform.parent = this.transform;
+		coordinates_adapter = (GameObject)Instantiate(prefab, transform);
+		coordinates_adapter.transform.parent = transform;
 
 		right_arm = GameObject.Find("r_arm_j1_link");
 		left_arm = GameObject.Find("l_arm_j1_link");
@@ -122,22 +137,16 @@ public class SmartPalContorol : MonoBehaviour {
 		AddTrigger(PosZMinusButton);
 		AddTrigger(LeftButton);
 		AddTrigger(RightButton);
-		//AddTrigger(ArmResetButton);
 		ArmResetButton.onClick.AddListener(ArmReset);
-
-		/*
-		ButtonCanvas = GameObject.Find("Main System/Button Canvas").GetComponent<Canvas>();
-		ButtonCanvas.gameObject.SetActive(false);
-		*/
-		/*
-		ControllCanvas = GameObject.Find("Main System/Robot Controll Canvas").GetComponent<Canvas>();
-		ControllCanvas.gameObject.SetActive(false);
-		*/
-
+		
 		ColorController = transform.GetComponent<RobotColorController>();
 	}
+	
 
-	// Update is called once per frame
+	/************************************************************
+	 * Update is called once per frame
+	 * 毎フレーム呼び出されるよ～
+	 ************************************************************/
 	void Update() {
 		CameraPositionText.text = "Camra : " + Camera.main.transform.position.ToString("f2") + Camera.main.transform.eulerAngles.ToString("f2");
 		SmartPalPositionText.text = "SmartPal : " + transform.position.ToString("f2") + transform.eulerAngles.ToString("f2");
@@ -154,6 +163,9 @@ public class SmartPalContorol : MonoBehaviour {
 		//debug.Debug(left_arm.transform.localRotation.eulerAngles.y.ToString());
 	}
 
+	/************************************************************
+	 * ロボットの位置等の初期化
+	 ************************************************************/
 	void RobotInit() {
 		switch (init_state) {
 			case 0:
@@ -168,10 +180,8 @@ public class SmartPalContorol : MonoBehaviour {
 			case 1:
 			List<DetectedPlane> planes = new List<DetectedPlane>();
 			Session.GetTrackables<DetectedPlane>(planes, TrackableQueryFilter.All);
-			planes.Reverse();
 			foreach(DetectedPlane plane in planes) {
 				if(plane.PlaneType == DetectedPlaneType.HorizontalUpwardFacing) {
-					base_plane_num = planes.IndexOf(plane);
 					base_plane = plane;
 
 					transform.position = plane.CenterPose.position;
@@ -183,21 +193,11 @@ public class SmartPalContorol : MonoBehaviour {
 					Vector3 robot_euler = transform.eulerAngles;
 					robot_euler.y -= rot2robot + 20.0f;
 					transform.eulerAngles = robot_euler;
-
-					/*
-					Vector3 tmp_position = new Vector3(0.0f, 0.7f, 0.2f);
-					coordinates_adapter.transform.localPosition = tmp_position;
-					tmp_position = coordinates_adapter.transform.position;
-					arrow3D.transform.position = tmp_position;
-					Vector3 tmp_euler = transform.eulerAngles;
-					arrow3D.transform.eulerAngles = tmp_euler;
-					*/
+					
 					ArrowChange();
 
 					ColorController.robot_alpha = robot_alpha_default;
 					ColorController.ChangeRobotColors(ColorController.safety_color);
-					//ButtonCanvas.gameObject.SetActive(true);
-					//ControllCanvas.gameObject.SetActive(true);
 					Main.NormalMode();
 					arrow3D.SetActive(true);
 					init_state = 2;
@@ -208,32 +208,23 @@ public class SmartPalContorol : MonoBehaviour {
 		}
 	}
 
+	/************************************************************
+	 * ロボットのY座標を最新の認識情報により調整
+	 ************************************************************/
 	void AutoYControll() {
 		List<DetectedPlane> planes = new List<DetectedPlane>();
 		Session.GetTrackables<DetectedPlane>(planes, TrackableQueryFilter.All);
-
-		/*
-		planes.Reverse();
-		foreach (DetectedPlane plane in planes) {
-			if (plane.PlaneType == DetectedPlaneType.HorizontalUpwardFacing) {
-				Vector3 tmp_pos = transform.position;
-				tmp_pos.y = plane.CenterPose.position.y;
-				transform.position = tmp_pos;
-			}
-		}
-		*/
-		/*
-		DetectedPlane plane = planes[base_plane_num];
-		Vector3 tmp_pos = transform.position;
-		tmp_pos.y = plane.CenterPose.position.y;
-		transform.position = tmp_pos;
-		*/
+		
 		Vector3 tmp_pos = transform.position;
 		tmp_pos.y = base_plane.CenterPose.position.y + pos_offset_y;
 		transform.position = tmp_pos;
 		ArrowChange();
 	}
 
+	/************************************************************
+	 * 最初にボタンに機能を設定する
+	 * 押したら・離したら変数を変更するだけ
+	 ************************************************************/
 	void AddTrigger(Button button) {
 		EventTrigger trigger = button.GetComponent<EventTrigger>();
 		EventTrigger.Entry entry_down = new EventTrigger.Entry();
@@ -306,18 +297,15 @@ public class SmartPalContorol : MonoBehaviour {
 			entry_down.callback.AddListener((x) => { push_right = true; });
 			entry_up.callback.AddListener((x) => { push_right = false; });
 			break;
-			/*
-			case "Arm Reset Button":
-			entry_down.callback.AddListener((x) => { push_arm_reset = true; });
-			entry_up.callback.AddListener((x) => { push_arm_reset = false; });
-			break;
-			*/
 		}
 
 		trigger.triggers.Add(entry_down);
 		trigger.triggers.Add(entry_up);
 	}
 
+	/************************************************************
+	 * ボタンが押されているときにすること一覧
+	 ************************************************************/
 	void ButtonControl() {
 		if (push_right_arm_up) {
 			right_arm.transform.localRotation *= Quaternion.Euler(0, -30.0f * Time.deltaTime, 0);
@@ -389,25 +377,11 @@ public class SmartPalContorol : MonoBehaviour {
 		}
 
 		if (push_y_plus) {
-			/*
-			Vector3 tmp_pos = transform.position;
-			tmp_pos.y += 0.5f * Time.deltaTime;
-			transform.position = tmp_pos;
-			*/
 			pos_offset_y += 0.5f * Time.deltaTime;
-
-			//ArrowChange();
 		}
 
 		if (push_y_minus) {
-			/*
-			Vector3 tmp_pos = transform.position;
-			tmp_pos.y -= 0.5f * Time.deltaTime;
-			transform.position = tmp_pos;
-			*/
 			pos_offset_y -= 0.5f * Time.deltaTime;
-
-			//ArrowChange();
 		}
 
 		if (push_z_plus) {
@@ -425,39 +399,11 @@ public class SmartPalContorol : MonoBehaviour {
 
 			ArrowChange();
 		}
-
-		//if (push_arm_reset) {
-			/*
-			bool left_complete = false, right_complete = false;
-			while (!left_complete || !right_complete) {
-				if (!left_complete) {
-					left_arm.transform.localRotation *= Quaternion.Euler(0, 60.0f * Time.deltaTime, 0);
-					if (left_arm.transform.localEulerAngles.y < 0.5f || left_arm.transform.localEulerAngles.y > 359.5f) {
-						left_arm.transform.localEulerAngles = new Vector3(0, 0, 180);
-						left_complete = true;
-					}
-				}
-				if (!right_complete) {
-					right_arm.transform.localRotation *= Quaternion.Euler(0, 60.0f * Time.deltaTime, 0);
-					if (right_arm.transform.localEulerAngles.y < 0.5f || right_arm.transform.localEulerAngles.y > 359.5f) {
-						right_arm.transform.localEulerAngles = new Vector3(0, 0, 180);
-						right_complete = true;
-					}
-				}
-			}
-			*/
-			/*
-			Vector3 tmp_euler = new Vector3(0, 0, 180);
-			left_arm.transform.localEulerAngles = tmp_euler;
-			right_arm.transform.localEulerAngles = tmp_euler;
-			*/
-			/*
-			IEnumerator coroutine = ArmResetSlowly();
-			StartCoroutine(coroutine);
-			*/
-		//}
 	}
 
+	/************************************************************
+	 * 矢印の場所の変更
+	 ************************************************************/
 	public void ArrowChange() {
 		if (!finish_arrow) {
 			Vector3 tmp_position = new Vector3(0.0f, 0.5f, 0.2f);
@@ -469,6 +415,9 @@ public class SmartPalContorol : MonoBehaviour {
 		}
 	}
 
+	/************************************************************
+	 * ArmResetButtonを押したら呼び出される
+	 ************************************************************/
 	void ArmReset() {
 		if (!push_arm_reset) {
 			IEnumerator coroutine = ArmResetSlowly();
@@ -476,6 +425,9 @@ public class SmartPalContorol : MonoBehaviour {
 		}
 	}
 
+	/************************************************************
+	 * 両腕を滑らかに初期位置に戻すやつ
+	 ************************************************************/
 	IEnumerator ArmResetSlowly() {
 		push_arm_reset = true;
 		bool left_complete = false, right_complete = false;
@@ -485,7 +437,6 @@ public class SmartPalContorol : MonoBehaviour {
 		float now_right_angle = right_arm.transform.localEulerAngles.y;
 		while (!left_complete || !right_complete) {
 			if (!left_complete) {
-				//if (left_arm.transform.localEulerAngles.y < 1.0f || left_arm.transform.localEulerAngles.y > 359.0f) {
 				if ((old_left_angle * now_left_angle < 0 && Mathf.Abs(old_left_angle * now_left_angle) < 100.0f) || Mathf.Abs(now_left_angle) < 1.0f) {
 					left_arm.transform.localEulerAngles = new Vector3(0, 0, 180);
 					left_complete = true;
@@ -503,7 +454,6 @@ public class SmartPalContorol : MonoBehaviour {
 				}
 			}
 			if (!right_complete) {
-				//if (right_arm.transform.localEulerAngles.y < 1.0f || right_arm.transform.localEulerAngles.y > 359.0f) {
 				if((old_right_angle * now_right_angle < 0 && Mathf.Abs(old_right_angle * now_right_angle) < 100.0f) || Mathf.Abs(now_right_angle) < 1.0f) {
 					right_arm.transform.localEulerAngles = new Vector3(0, 0, 180);
 					right_complete = true;
